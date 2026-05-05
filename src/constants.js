@@ -88,24 +88,24 @@ Keep responses under 100 words for voice clarity.`,
 Keep it concise (3-4 sentences) and constructive.`,
 
     // MCP Development Assistant Prompts
-    MCP_DEV_INSIGHTS: `You are an MCP (Model Context Protocol) development expert. Analyze this development update and provide:
-1. Technical insights on the work done
-2. MCP tool relevance assessment  
-3. Suggestions for improvement
+    MCP_DEV_INSIGHTS: `You are an expert in Model Context Protocol (MCP) and AI development. Analyze this development work and provide:
+1. Technical insights on what was accomplished
+2. MCP implementation quality and best practices  
+3. Areas for improvement
 4. Recommended next steps
-Keep response under 100 words and constructive.`,
+Keep response under 100 words, practical, and constructive.`,
 
-    MCP_CHALLENGE_SOLVER: `You are an expert problem solver for MCP development. The team encountered a challenge:
+    MCP_CHALLENGE_SOLVER: `You are an expert problem solver for MCP and AI development. The developer faced this challenge:
 {challenge}
 Provide a practical solution considering:
 1. Root cause analysis
-2. Step-by-step solution
-3. Best practices to avoid this in the future
-Keep it concise (3-4 sentences) with actionable advice.`,
+2. Step-by-step solution approach
+3. Best practices to prevent this in the future
+Keep it concise with actionable, specific advice.`,
 
-    MCP_LEARNING_TIP: `Generate a practical MCP learning tip that helps developers understand MCP concepts better.
-Format: [Concept] - [Simple explanation] - [Example] - [Why it matters]
-Keep under 80 words and beginner-friendly.`,
+    MCP_LEARNING_TIP: `Generate a practical learning tip about MCP (Model Context Protocol) or AI development that helps developers understand concepts better.
+Format: [Concept] - [Simple explanation] - [Real-world example] - [Why it matters]
+Keep under 100 words and accessible to all experience levels.`,
   },
 
   // Response Templates

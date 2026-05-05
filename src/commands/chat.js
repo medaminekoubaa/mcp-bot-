@@ -68,22 +68,27 @@ export async function handleChat(req, res) {
 
     const welcomeEmbed = {
       title: '💬 AI Chat Session',
-      description: 'Use `/ask` command to chat with AI about MCP and implementation',
+      description: 'Use `/ask` command to chat about MCP, AI development, and implementation strategies',
       color: 0x5865F2,
       fields: [
         {
-          name: '📝 Usage',
-          value: 'Use `/ask question: <your question>`',
+          name: '📝 How to Use',
+          value: 'Type `/ask question: <your question>` in this channel',
           inline: false,
         },
         {
-          name: '✅ Topics',
-          value: 'MCP concepts, Career platform, AIRA analytics',
+          name: '💡 What You Can Ask About',
+          value: 'MCP architecture • AI/LLM integration • Best practices • Implementation patterns • Troubleshooting • Design decisions',
+          inline: false,
+        },
+        {
+          name: '💾 Conversation Storage',
+          value: 'All conversations are saved for future reference and learning',
           inline: false,
         },
         {
           name: '🔒 Privacy',
-          value: 'Private channel - only visible to you',
+          value: 'This channel is private - only visible to you',
           inline: false,
         },
       ],
