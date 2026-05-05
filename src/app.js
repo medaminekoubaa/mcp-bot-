@@ -9,7 +9,7 @@ import {
   verifyKeyMiddleware,
 } from 'discord-interactions';
 import { getRandomEmoji, DiscordRequest } from './utils.js';
-import { getShuffledOptions, getResult } from './game.js';
+import { getShuffledOptions, getResult, getWinner } from './game.js';
 import { CONSTANTS } from './constants.js';
 import mongodbService from './services/mongodbService.js';
 import groqService from './services/groqService.js';
@@ -113,10 +113,15 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
       }
 
       // Determine bot choice
-      const botChoice = getResult(playerChoice);
+      const choices = ['rock', 'paper', 'scissors', 'lizard', 'spock', 'cowboy', 'wumpus', 'computer', 'virus'];
+      const botChoiceName = choices[Math.floor(Math.random() * choices.length)];
+
+      // Create choice objects with required properties
+      const p1 = { objectName: botChoiceName, id: req.body.application_id };
+      const p2 = { objectName: playerChoice, id: req.body.member.user.id };
 
       // Calculates tie/win/loss
-      const resultValue = getResult(botChoice, playerChoice);
+      const resultValue = getWinner(p1, p2);
 
       // Respond by sending ephemeral message with user's choice data
       return res.send({
@@ -127,12 +132,12 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
           embeds: [
             {
               title: 'Nice!',
-              description: `You chose **${playerChoice}**\n${botChoice !== playerChoice ? `I chose **${botChoice}**` : 'I did the same!'}`,
+              description: `You chose **${playerChoice}**\n${botChoiceName !== playerChoice ? `I chose **${botChoiceName}**` : 'I did the same!'}`,
               color: 0x00acee,
             },
             {
-              title: resultValue === 1 ? 'You won! 🎉' : resultValue === -1 ? 'You lost 😔' : "It's a tie! 🤝",
-              color: resultValue === 1 ? 0x92a8d1 : resultValue === -1 ? 0xff6961 : 0xf69541,
+              title: resultValue === 1 ? 'You lost 😔' : resultValue === -1 ? 'You won! 🎉' : "It's a tie! 🤝",
+              color: resultValue === 1 ? 0xff6961 : resultValue === -1 ? 0x92a8d1 : 0xf69541,
             },
           ],
         },

@@ -27,6 +27,20 @@ export function getResult(p1, p2) {
   return formatResult(gameResult);
 }
 
+export function getWinner(p1, p2) {
+  // Returns: 1 if p1 wins, -1 if p2 wins, 0 if tie
+  if (RPSChoices[p1.objectName] && RPSChoices[p1.objectName][p2.objectName]) {
+    return 1; // p1 (bot) wins
+  } else if (
+    RPSChoices[p2.objectName] &&
+    RPSChoices[p2.objectName][p1.objectName]
+  ) {
+    return -1; // p2 (player) wins
+  } else {
+    return 0; // tie
+  }
+}
+
 function formatResult(result) {
   const { win, lose, verb } = result;
   return verb === 'tie'
