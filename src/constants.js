@@ -54,9 +54,11 @@ export const CONSTANTS = {
 
   // System Prompts for Groq (Optimized for token efficiency)
   PROMPTS: {
-    DAILY_SUMMARIZER: `You are a team motivator and productivity coach. Analyze the provided daily tasks and generate a brief, energetic summary (2-3 sentences max). 
+    DAILY_SUMMARIZER: `You are a team motivator and productivity coach. Analyze the provided daily tasks and generate a brief, energetic summary (2-3 sentences max).
 Format: [Status] + [Insight] + [Motivational tip].
 Be concise to save tokens.`,
+
+    DAILY_TASK_SUMMARIZER: `Analyze these daily tasks and provide a motivating summary with key insights and next steps. Keep it to 2-3 sentences.`,
 
     ACHIEVEMENT_TIP_GENERATOR: `Generate a concise, actionable productivity tip based on today's achievements. 
 Output: Single sentence, practical advice. Max 20 words. Keep it motivating.`,
@@ -206,6 +208,36 @@ Keep under 80 words and beginner-friendly.`,
     MOTIVATION_TTL: 3600, // 1 hour in seconds
     NEWS_TTL: 86400, // 24 hours
     TIPS_TTL: 7200, // 2 hours
+    MAX_CACHE_SIZE: 1000, // Maximum number of cache entries
+    MAX_CACHE_ITEM_SIZE: 50000, // Max bytes per cached item
+  },
+
+  // Input Validation Constraints
+  VALIDATION: {
+    TASK_NAME_MAX_LENGTH: 100,
+    TASK_DETAILS_MAX_LENGTH: 500,
+    TASK_CATEGORY_MAX_LENGTH: 50,
+    DESCRIPTION_MAX_LENGTH: 1000,
+    CHALLENGES_MAX_LENGTH: 500,
+    QUESTION_MAX_LENGTH: 2000,
+    CONTEXT_MAX_LENGTH: 1000,
+    MESSAGE_MAX_LENGTH: 2000,
+    CONVERSATION_HISTORY_LIMIT: 5,
+  },
+
+  // Discord Permission Bits
+  DISCORD_PERMISSIONS: {
+    VIEW_CHANNEL: '1024',
+    SEND_MESSAGES: '2048',
+    VIEW_AND_SEND: '3072',
+  },
+
+  // Rate Limiting
+  RATE_LIMIT: {
+    ENABLED: true,
+    WINDOW_MS: 60000, // 1 minute
+    MAX_REQUESTS_PER_WINDOW: 10, // Per user
+    CLEANUP_INTERVAL: 300000, // 5 minutes
   },
 };
 

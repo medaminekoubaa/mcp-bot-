@@ -4,47 +4,43 @@
  */
 
 import { InteractionResponseType } from 'discord-interactions';
+import { CONSTANTS } from '../constants.js';
 import mongodbService from '../services/mongodbService.js';
 import logger from '../services/logger.js';
+import Validator from '../services/validator.js';
 import { DiscordRequest } from '../utils.js';
 
-/**
- * Handle /chat command - creates a private channel for AI conversation
- */
 export async function handleChat(req, res) {
   try {
-    const userId = req.body.member.user.id;
+    const userId = Validator.validateUserId(req.body.member.user.id);
     const userName = req.body.member.user.username;
     const guildId = req.body.guild_id;
     const applicationId = req.body.application_id;
 
-    logger.info('Commands/Chat', 'Chat session requested', { userId, userName });
+    logger.info('Chat', 'Session requested', { userId });
 
-    // Acknowledge interaction (defer reply)
     res.send({
       type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
     });
 
-    // Generate unique channel name
     const timestamp = Date.now();
-    const channelName = `chat-with-ai-${timestamp}`;
+    const channelName = `chat-${timestamp}`;
 
-    // Create private channel in Discord
     const channelData = {
       name: channelName,
-      type: 0, // GUILD_TEXT channel
-      parent_id: null, // Top-level channel
-      topic: `Private AI chat with ${userName} - MCP & Implementation discussion`,
+      type: 0,
+      parent_id: null,
+      topic: `AI chat with ${userName}`,
       permission_overwrites: [
         {
           id: guildId,
           type: 'role',
-          deny: '1024', // DENY VIEW_CHANNEL
+          deny: CONSTANTS.DISCORD_PERMISSIONS.VIEW_CHANNEL,
         },
         {
           id: userId,
           type: 'member',
-          allow: '3072', // ALLOW VIEW_CHANNEL + SEND_MESSAGES
+          allow: CONSTANTS.DISCORD_PERMISSIONS.VIEW_AND_SEND,
         },
       ],
     };
@@ -57,13 +53,12 @@ export async function handleChat(req, res) {
     );
 
     if (!channelResponse.ok) {
-      throw new Error(`Failed to create channel: ${channelResponse.statusText}`);
+      throw new Error(`Failed to create channel`);
     }
 
     const channel = await channelResponse.json();
     const channelId = channel.id;
 
-    // Create chat session in MongoDB
     await mongodbService.createChatSession({
       userId,
       userName,
@@ -71,52 +66,44 @@ export async function handleChat(req, res) {
       channelName,
     });
 
-    // Send welcome message to the new channel
     const welcomeEmbed = {
-      title: '💬 Welcome to Your Private AI Chat',
-      description: 'Use `/ask` command to discuss MCP and implementation with the AI.',
+      title: '💬 AI Chat Session',
+      description: 'Use `/ask` command to chat with AI about MCP and implementation',
       color: 0x5865F2,
       fields: [
         {
-          name: '📝 How to Ask:',
-          value: 'Use `/ask question: <your question>` to get AI responses.\nExample: `/ask question: How do I implement MCP tools in Career platform?`',
+          name: '📝 Usage',
+          value: 'Use `/ask question: <your question>`',
           inline: false,
         },
         {
-          name: '✅ AI Focus:',
-          value:
-            'The AI will answer only about:\n• Model Context Protocol (MCP) concepts\n• Implementation in Career platform\n• AIRA team analytics platform',
+          name: '✅ Topics',
+          value: 'MCP concepts, Career platform, AIRA analytics',
           inline: false,
         },
         {
-          name: '💾 Storage:',
-          value: 'All conversations are saved to a private history for reference',
-          inline: false,
-        },
-        {
-          name: '🔒 Privacy:',
-          value: 'This channel is private - only visible to you',
+          name: '🔒 Privacy',
+          value: 'Private channel - only visible to you',
           inline: false,
         },
       ],
-      footer: {
-        text: 'Type /ask followed by your question to start chatting',
-      },
     };
 
-    await DiscordRequest(
-      `/channels/${channelId}/messages`,
-      {
-        method: 'POST',
-        body: {
-          embeds: [welcomeEmbed],
+    try {
+      await DiscordRequest(
+        `/channels/${channelId}/messages`,
+        {
+          method: 'POST',
+          body: { embeds: [welcomeEmbed] },
         },
-      },
-      applicationId
-    );
+        applicationId
+      );
+    } catch (messageError) {
+      logger.warn('Chat', 'Failed to send welcome message', { message: messageError.message });
+    }
 
-    logger.info('Commands/Chat', 'Chat session created', { channelId, userId });
+    logger.info('Chat', 'Session created', { channelId, userId });
   } catch (error) {
-    logger.error('Commands/Chat', 'Chat creation failed', { error: error.message });
+    logger.error('Chat', 'Creation failed', { message: error.message });
   }
 }

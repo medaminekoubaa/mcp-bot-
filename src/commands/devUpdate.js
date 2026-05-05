@@ -8,30 +8,22 @@ import { CONSTANTS } from '../constants.js';
 import mongodbService from '../services/mongodbService.js';
 import groqService from '../services/groqService.js';
 import logger from '../services/logger.js';
+import Validator from '../services/validator.js';
 
-/**
- * Handle /dev-update command
- * Logs daily development progress for MCP projects
- */
 export async function handleDevUpdate(req, res) {
   try {
-    const discordId = req.body.member.user.id;
+    const discordId = Validator.validateUserId(req.body.member.user.id);
     const username = req.body.member.user.username;
     const { options } = req.body.data;
 
-    // Parse command options
     const project = options?.find(o => o.name === 'project')?.value || 'Career';
     const taskCategory = options?.find(o => o.name === 'task_category')?.value || 'feature';
-    const description = options?.find(o => o.name === 'description')?.value || '';
+    const description = Validator.validateDescription(options?.find(o => o.name === 'description')?.value);
     const mcpToolsInput = options?.find(o => o.name === 'mcp_tools')?.value || '';
-    const challenges = options?.find(o => o.name === 'challenges')?.value || '';
-    const status = options?.find(o => o.name === 'status')?.value || 'completed';
+    const challenges = Validator.validateChallenges(options?.find(o => o.name === 'challenges')?.value);
+    const status = Validator.validateStatus(options?.find(o => o.name === 'status')?.value);
 
-    // Parse MCP tools (comma-separated)
-    const mcpTools = mcpToolsInput
-      .split(',')
-      .map(t => t.trim())
-      .filter(t => t.length > 0);
+    const mcpTools = Validator.validateMcpTools(mcpToolsInput);
 
     logger.info('Commands/MCP', 'Development update logged', {
       discordId,
@@ -127,26 +119,20 @@ export async function handleDevUpdate(req, res) {
       },
     });
 
-    // Update MongoDB to mark AI was used
     if (aiInsights && aiInsights !== '(AI insights unavailable)') {
-      await mongodbService.db.collection(CONSTANTS.MONGODB.COLLECTIONS.MCP_DEVELOPMENT_LOGS).updateOne(
-        { _id: savedLog._id },
-        {
-          $set: {
-            ai_used: true,
-            ai_tools: ['Groq'],
-          },
-        }
-      );
+      await mongodbService.updateMCPDevLog(savedLog._id, {
+        ai_used: true,
+        ai_tools: ['Groq'],
+      });
     }
   } catch (error) {
-    console.error('[DevUpdate] Error:', error.message);
+    logger.error('DevUpdate', 'Command failed', { message: error.message });
 
-    res.json({
+    return res.json({
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        content: '❌ Error logging development update. Please try again.',
-        flags: 64, // Ephemeral (only visible to user)
+        content: `❌ ${error.message || 'Error logging development update. Please try again.'}`,
+        flags: 64,
       },
     });
   }

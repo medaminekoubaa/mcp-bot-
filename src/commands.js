@@ -8,6 +8,7 @@ import { CONSTANTS } from './constants.js';
 import mongodbService from './services/mongodbService.js';
 import groqService from './services/groqService.js';
 import logger from './services/logger.js';
+import Validator from './services/validator.js';
 
 /**
  * Handle /task-completed command
@@ -15,24 +16,22 @@ import logger from './services/logger.js';
  */
 export async function handleTaskCompleted(req, res) {
   try {
-    const userId = req.body.member.user.id;
+    const userId = Validator.validateUserId(req.body.member.user.id);
     const username = req.body.member.user.username;
     const { options } = req.body.data;
 
-    // Parse command options
-    const taskName = options?.find(o => o.name === 'task_name')?.value || 'Unknown Task';
-    const details = options?.find(o => o.name === 'details')?.value || '';
-    const category = options?.find(o => o.name === 'category')?.value || 'general';
+    const taskName = Validator.validateTaskName(options?.find(o => o.name === 'task_name')?.value);
+    const details = Validator.validateTaskDetails(options?.find(o => o.name === 'details')?.value);
+    const category = Validator.validateCategory(options?.find(o => o.name === 'category')?.value);
 
-    logger.info('Commands', 'Task completed', { userId, taskName, category });
+    logger.info('Commands', 'Task completed', { userId, category });
 
-    // Save to database
     const taskData = {
       userId,
-      taskName: taskName.substring(0, 100),
-      details: details.substring(0, 500),
+      taskName,
+      details,
       category,
-      date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+      date: new Date().toISOString().split('T')[0],
       status: 'completed',
     };
 

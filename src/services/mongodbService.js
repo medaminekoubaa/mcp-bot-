@@ -607,6 +607,30 @@ class MongoDBService {
    */
 
   /**
+   * Update a development log (internal use)
+   * @param {ObjectId} logId - Development log ID
+   * @param {Object} updates - Fields to update
+   * @returns {Promise<void>}
+   */
+  async updateMCPDevLog(logId, updates) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.MCP_DEVELOPMENT_LOGS);
+      await collection.updateOne(
+        { _id: logId },
+        {
+          $set: {
+            ...updates,
+            'timestamps.updated': new Date(),
+          },
+        }
+      );
+    } catch (error) {
+      console.error('[MongoDB] Error updating dev log:', error.message);
+      throw error;
+    }
+  }
+
+  /**
    * Log a development update
    * @param {string} discordId - Discord user ID
    * @param {Object} devUpdateData - Update details

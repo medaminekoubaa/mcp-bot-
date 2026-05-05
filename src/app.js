@@ -1,16 +1,15 @@
 import 'dotenv/config';
 import express from 'express';
 import {
-  InteractionResponseFlags,
   InteractionResponseType,
   InteractionType,
   verifyKeyMiddleware,
 } from 'discord-interactions';
-import { getRandomEmoji, DiscordRequest } from './utils.js';
 import { CONSTANTS } from './constants.js';
 import mongodbService from './services/mongodbService.js';
 import groqService from './services/groqService.js';
 import logger from './services/logger.js';
+import rateLimiter from './services/rateLimiter.js';
 import { handleCommand } from './commands.js';
 import { handleDevUpdate } from './commands/devUpdate.js';
 import { handleMcpLearn } from './commands/mcpLearn.js';
@@ -19,81 +18,82 @@ import { handleDailyTip } from './commands/dailyTip.js';
 import { handleChallengeSolver } from './commands/challengeSolver.js';
 import { handleAiInsights } from './commands/aiInsights.js';
 import { handleChat } from './commands/chat.js';
-import { handleChatMessage } from './handlers/chatMessageHandler.js';
 import { handleAsk } from './commands/ask.js';
 
-// Create an express app
 const app = express();
-// Get port, or default to 3000
 const PORT = process.env.PORT || 3000;
 
-/**
- * Interactions endpoint URL where Discord will send HTTP requests
- * Parse request body and verifies incoming requests using discord-interactions package
- */
-app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async function (req, res) {
-  // Interaction id, type and data
-  const { id, type, data } = req.body;
+const COMMAND_HANDLERS = {
+  'dev-update': handleDevUpdate,
+  'mcp-learn': handleMcpLearn,
+  'team-progress': handleTeamProgress,
+  'daily-tip': handleDailyTip,
+  'challenge-solver': handleChallengeSolver,
+  'ai-insights': handleAiInsights,
+  'chat': handleChat,
+  'ask': handleAsk,
+  'task-completed': (req, res) => handleCommand(req, res, 'task-completed'),
+  'yesterday-summary': (req, res) => handleCommand(req, res, 'yesterday-summary'),
+  'today-plan': (req, res) => handleCommand(req, res, 'today-plan'),
+  'get-motivation': (req, res) => handleCommand(req, res, 'get-motivation'),
+  'team-stats': (req, res) => handleCommand(req, res, 'team-stats'),
+  'view-streak': (req, res) => handleCommand(req, res, 'view-streak'),
+  'leaderboard': (req, res) => handleCommand(req, res, 'leaderboard'),
+};
 
-  /**
-   * Handle verification requests
-   */
-  if (type === InteractionType.PING) {
-    return res.send({ type: InteractionResponseType.PONG });
-  }
+app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async (req, res) => {
+  try {
+    const { id, type, data } = req.body;
 
-  /**
-   * Handle slash command requests
-   * See https://discord.com/developers/docs/interactions/application-commands/handling-user-commands for more info
-   */
-  if (type === InteractionType.APPLICATION_COMMAND) {
-    const { name } = data;
-
-    // Route to MCP development commands
-    if (name === 'dev-update') {
-      return await handleDevUpdate(req, res);
-    }
-    if (name === 'mcp-learn') {
-      return await handleMcpLearn(req, res);
-    }
-    if (name === 'team-progress') {
-      return await handleTeamProgress(req, res);
-    }
-    if (name === 'daily-tip') {
-      return await handleDailyTip(req, res);
-    }
-    if (name === 'challenge-solver') {
-      return await handleChallengeSolver(req, res);
-    }
-    if (name === 'ai-insights') {
-      return await handleAiInsights(req, res);
-    }
-    if (name === 'chat') {
-      return await handleChat(req, res);
-    }
-    if (name === 'ask') {
-      return await handleAsk(req, res);
+    if (type === InteractionType.PING) {
+      return res.send({ type: InteractionResponseType.PONG });
     }
 
-    // Route to daily tracking commands
-    if (['task-completed', 'yesterday-summary', 'today-plan', 'get-motivation', 'team-stats', 'view-streak', 'leaderboard'].includes(name)) {
-      return await handleCommand(req, res, name);
-    }
+    if (type === InteractionType.APPLICATION_COMMAND) {
+      const { name } = data;
+      const userId = req.body.member?.user?.id;
 
-    // "test" command (legacy)
-    if (name === 'test') {
+      if (userId) {
+        const rateLimitCheck = rateLimiter.checkLimit(userId);
+        if (!rateLimitCheck.allowed) {
+          return res.send({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              content: `⏳ Rate limit exceeded. Please try again in ${Math.ceil((rateLimitCheck.resetTime - new Date()) / 1000)} seconds.`,
+              flags: 64,
+            },
+          });
+        }
+      }
+
+      const handler = COMMAND_HANDLERS[name];
+      if (handler) {
+        logger.info('Bot', `Command executed: ${name}`, { userId });
+        return await handler(req, res);
+      }
+
+      if (name === 'test') {
+        return res.send({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: { content: 'Test command works! 🤖' },
+        });
+      }
+
+      logger.warn('Bot', `Unknown command: ${name}`);
       return res.send({
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          content: 'hello world ' + getRandomEmoji(),
+          content: `Unknown command: ${name}`,
+          flags: 64,
         },
       });
     }
 
-
+    logger.warn('Bot', `Unhandled interaction type: ${type}`);
+  } catch (error) {
+    logger.error('Bot', 'Interaction handler error', { message: error.message });
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-
 });
 
 // Initialize services and start server

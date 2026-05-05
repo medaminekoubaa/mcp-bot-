@@ -4,43 +4,26 @@
  */
 
 import { InteractionResponseType } from 'discord-interactions';
+import { CONSTANTS } from '../constants.js';
 import mongodbService from '../services/mongodbService.js';
 import groqService from '../services/groqService.js';
 import logger from '../services/logger.js';
+import Validator from '../services/validator.js';
 
-/**
- * MCP-focused system prompt for chat sessions
- */
-const MCP_CHAT_SYSTEM_PROMPT = `You are an expert MCP (Model Context Protocol) assistant focused on helping teams implement MCP.
-
-SCOPE: Answer ONLY about:
-- Model Context Protocol (MCP) architecture and concepts
-- Implementing MCP in the Career platform (job applications, CV analysis, interview scheduling)
-- Implementing MCP in the AIRA analytics platform (team metrics, skill tracking, performance analysis)
-- Best practices for MCP tool integration and debugging
-- Troubleshooting MCP implementation issues
-
-RESPONSE GUIDELINES:
-1. Keep responses concise (2-3 paragraphs max)
-2. Provide practical, actionable advice
-3. Include code examples when relevant
-4. If asked about non-MCP topics, politely redirect
-5. Reference specific Career/AIRA use cases when applicable
-
+const MCP_CHAT_SYSTEM_PROMPT = `You are an expert MCP (Model Context Protocol) assistant.
+SCOPE: Answer ONLY about MCP architecture, Career/AIRA platform implementation, and best practices.
+GUIDELINES: Keep responses concise (2-3 paragraphs), provide practical advice, include code examples, reference Career/AIRA use cases.
 TONE: Professional, helpful, technical`;
 
-/**
- * Handle /ask command in chat sessions
- */
 export async function handleAsk(req, res) {
   try {
-    const userId = req.body.member.user.id;
+    const userId = Validator.validateUserId(req.body.member.user.id);
     const userName = req.body.member.user.username;
-    const channelId = req.body.channel_id;
+    const channelId = Validator.validateChannelId(req.body.channel_id);
     const { options } = req.body.data;
 
-    const question = options?.find(o => o.name === 'question')?.value || '';
-    const context = options?.find(o => o.name === 'context')?.value || '';
+    const question = Validator.validateQuestion(options?.find(o => o.name === 'question')?.value);
+    const context = Validator.validateContext(options?.find(o => o.name === 'context')?.value);
 
     logger.info('Commands/Ask', 'Ask command received', { userId, question: question.substring(0, 50) });
 
@@ -59,33 +42,26 @@ export async function handleAsk(req, res) {
       });
     }
 
-    // Build conversation context (last 5 messages from session if available)
     let conversationHistory = '';
     if (session && session.messages) {
-      const recentMessages = session.messages.slice(-5) || [];
+      const recentMessages = session.messages.slice(-CONSTANTS.VALIDATION.CONVERSATION_HISTORY_LIMIT) || [];
       conversationHistory = recentMessages
         .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
         .join('\n\n');
     }
 
-    // Generate AI response
     let aiResponse;
     try {
       const fullPrompt = `${MCP_CHAT_SYSTEM_PROMPT}
-
-${conversationHistory ? `CONVERSATION HISTORY:\n${conversationHistory}\n\n` : ''}NEW QUESTION FROM ${userName}:
-${question}${context ? `\n\nAdditional Context: ${context}` : ''}
-
-Provide helpful MCP-focused response:`;
+${conversationHistory ? `HISTORY:\n${conversationHistory}\n\n` : ''}QUESTION FROM ${userName}:\n${question}${context ? `\n\nContext: ${context}` : ''}`;
 
       aiResponse = await groqService.executeMCPRequest(fullPrompt, 'recommendation', { maxTokens: 400 });
     } catch (aiError) {
-      logger.warn('Commands/Ask', 'AI generation failed', { error: aiError.message });
-      aiResponse = `I encountered an issue generating a response. This might be due to API rate limits. Please try again in a moment.`;
+      logger.warn('Ask', 'AI generation failed', { message: aiError.message });
+      aiResponse = 'I encountered an issue. Please try again in a moment.';
     }
 
-    // Validate response length for Discord (max 2000 chars)
-    const finalResponse = aiResponse.substring(0, 1900);
+    const finalResponse = aiResponse.substring(0, CONSTANTS.VALIDATION.MESSAGE_MAX_LENGTH - 100);
 
     // Save AI response to session if in session
     if (session) {

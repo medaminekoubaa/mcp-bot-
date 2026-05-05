@@ -328,11 +328,15 @@ const MCP_COMMANDS = [
 const ALL_COMMANDS = [...DAILY_TRACKING_COMMANDS, ...LEGACY_COMMANDS, ...MCP_COMMANDS];
 
 console.log('📋 Registering Discord commands...');
-console.log(`📝 Daily Tracking Commands: ${DAILY_TRACKING_COMMANDS.length}`);
-console.log(`📝 MCP Commands: ${MCP_COMMANDS.length}`);
-console.log(`📝 Legacy Commands: ${LEGACY_COMMANDS.length}`);
-console.log(`📝 Total Commands: ${ALL_COMMANDS.length}`);
+console.log(`  Daily Tracking: ${DAILY_TRACKING_COMMANDS.length}`);
+console.log(`  MCP Commands: ${MCP_COMMANDS.length}`);
+console.log(`  Legacy: ${LEGACY_COMMANDS.length}`);
+console.log(`  Total: ${ALL_COMMANDS.length}`);
 
-InstallGlobalCommands(process.env.APP_ID, ALL_COMMANDS);
-
-console.log('✅ Commands registered successfully!');
+try {
+  await InstallGlobalCommands(process.env.APP_ID, ALL_COMMANDS);
+  console.log('✅ Commands registered successfully!');
+} catch (error) {
+  console.error('❌ Command registration failed:', error.message);
+  process.exit(1);
+}
