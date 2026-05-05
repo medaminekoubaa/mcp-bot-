@@ -1,28 +1,28 @@
 import 'dotenv/config';
 import express from 'express';
 import {
-  ButtonStyleTypes,
   InteractionResponseFlags,
   InteractionResponseType,
   InteractionType,
-  MessageComponentTypes,
   verifyKeyMiddleware,
 } from 'discord-interactions';
 import { getRandomEmoji, DiscordRequest } from './utils.js';
-import { getShuffledOptions, getResult, getWinner } from './game.js';
 import { CONSTANTS } from './constants.js';
 import mongodbService from './services/mongodbService.js';
 import groqService from './services/groqService.js';
 import logger from './services/logger.js';
 import { handleCommand } from './commands.js';
 import { handleDevUpdate } from './commands/devUpdate.js';
+import { handleMcpLearn } from './commands/mcpLearn.js';
+import { handleTeamProgress } from './commands/teamProgress.js';
+import { handleDailyTip } from './commands/dailyTip.js';
+import { handleChallengeSolver } from './commands/challengeSolver.js';
+import { handleAiInsights } from './commands/aiInsights.js';
 
 // Create an express app
 const app = express();
 // Get port, or default to 3000
 const PORT = process.env.PORT || 3000;
-// To keep track of our active games
-const activeGames = {};
 
 /**
  * Interactions endpoint URL where Discord will send HTTP requests
@@ -50,6 +50,21 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
     if (name === 'dev-update') {
       return await handleDevUpdate(req, res);
     }
+    if (name === 'mcp-learn') {
+      return await handleMcpLearn(req, res);
+    }
+    if (name === 'team-progress') {
+      return await handleTeamProgress(req, res);
+    }
+    if (name === 'daily-tip') {
+      return await handleDailyTip(req, res);
+    }
+    if (name === 'challenge-solver') {
+      return await handleChallengeSolver(req, res);
+    }
+    if (name === 'ai-insights') {
+      return await handleAiInsights(req, res);
+    }
 
     // Route to daily tracking commands
     if (['task-completed', 'yesterday-summary', 'today-plan', 'get-motivation', 'team-stats', 'view-streak', 'leaderboard'].includes(name)) {
@@ -66,90 +81,10 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
       });
     }
 
-    // "challenge" command (legacy - rock paper scissors)
-    if (name === 'challenge') {
-      const userId = req.body.member.user.id;
-      activeGames[userId] = {};
 
-      return res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          content: 'rock paper scissors!',
-          components: [
-            {
-              type: MessageComponentTypes.ACTION_ROW,
-              components: [
-                {
-                  type: MessageComponentTypes.STRING_SELECT,
-                  custom_id: 'accept_challenge',
-                  options: getShuffledOptions(),
-                },
-              ],
-            },
-          ],
-        },
-      });
-    }
   }
 
-  /**
-   * Handle requests from interactive components
-   * See https://discord.com/developers/docs/interactions/message-components#responding-to-component-interactions
-   */
-  if (type === InteractionType.MESSAGE_COMPONENT) {
-    // custom_id set in payload when sending message component
-    const componentId = data.custom_id;
 
-    if (componentId.startsWith('accept_challenge')) {
-      // get the selected value from the first action row's select menu
-      const userId = req.body.member.user.id;
-      const playerChoice = data.values[0];
-
-      // Correct format with file extension
-      const guildId = req.body.guild_id;
-      const channelId = req.body.channel_id;
-      const gameId = req.body.id;
-
-      // Delete message with token in request body
-      const endpoint = `webhooks/${req.body.application_id}/${req.body.token}/messages/${gameId}`;
-      try {
-        await DiscordRequest(endpoint, { method: 'DELETE' });
-      } catch (err) {
-        console.error('Error deleting message:', err);
-      }
-
-      // Determine bot choice
-      const choices = ['rock', 'paper', 'scissors', 'lizard', 'spock', 'cowboy', 'wumpus', 'computer', 'virus'];
-      const botChoiceName = choices[Math.floor(Math.random() * choices.length)];
-
-      // Create choice objects with required properties
-      const p1 = { objectName: botChoiceName, id: req.body.application_id };
-      const p2 = { objectName: playerChoice, id: req.body.member.user.id };
-
-      // Calculates tie/win/loss
-      const resultValue = getWinner(p1, p2);
-
-      // Respond by sending ephemeral message with user's choice data
-      return res.send({
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          // Ephemeral message (only visible to user)
-          flags: InteractionResponseFlags.EPHEMERAL,
-          embeds: [
-            {
-              title: 'Nice!',
-              description: `You chose **${playerChoice}**\n${botChoiceName !== playerChoice ? `I chose **${botChoiceName}**` : 'I did the same!'}`,
-              color: 0x00acee,
-            },
-            {
-              title: resultValue === 1 ? 'You lost 😔' : resultValue === -1 ? 'You won! 🎉' : "It's a tie! 🤝",
-              color: resultValue === 1 ? 0xff6961 : resultValue === -1 ? 0x92a8d1 : 0xf69541,
-            },
-          ],
-        },
-      });
-    }
-  }
 });
 
 // Initialize services and start server

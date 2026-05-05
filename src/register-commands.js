@@ -97,26 +97,6 @@ const LEGACY_COMMANDS = [
     integration_types: [0, 1],
     contexts: [0, 1, 2],
   },
-  {
-    name: 'challenge',
-    description: 'Challenge to rock paper scissors',
-    options: [
-      {
-        type: 3,
-        name: 'object',
-        description: 'Pick your object',
-        required: true,
-        choices: [
-          { name: 'Rock', value: 'rock' },
-          { name: 'Paper', value: 'paper' },
-          { name: 'Scissors', value: 'scissors' },
-        ],
-      },
-    ],
-    type: 1,
-    integration_types: [0, 1],
-    contexts: [0, 2],
-  },
 ];
 
 // MCP Development Assistant Commands
@@ -178,6 +158,134 @@ const MCP_COMMANDS = [
           { name: 'Completed', value: 'completed' },
           { name: 'In Progress', value: 'in-progress' },
           { name: 'Blocked', value: 'blocked' },
+        ],
+      },
+    ],
+    type: 1,
+    integration_types: [0, 1],
+    contexts: [0, 1, 2],
+  },
+  {
+    name: 'mcp-learn',
+    description: 'Get learning tips on MCP, Docker, AI/LLM concepts',
+    options: [
+      {
+        name: 'category',
+        description: 'What topic do you want to learn?',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'MCP Basics', value: 'mcp' },
+          { name: 'Docker & Containers', value: 'docker' },
+          { name: 'AI & LLM', value: 'ai-llm' },
+          { name: 'Tools & Integration', value: 'tools' },
+        ],
+      },
+      {
+        name: 'difficulty',
+        description: 'Learning level',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'Beginner', value: 'beginner' },
+          { name: 'Intermediate', value: 'intermediate' },
+          { name: 'Advanced', value: 'advanced' },
+        ],
+      },
+    ],
+    type: 1,
+    integration_types: [0, 1],
+    contexts: [0, 1, 2],
+  },
+  {
+    name: 'team-progress',
+    description: 'View aggregated team MCP analytics and progress',
+    options: [
+      {
+        name: 'project',
+        description: 'Which project to analyze?',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'Career', value: 'Career' },
+          { name: 'AIRA', value: 'AIRA' },
+          { name: 'Both', value: 'all' },
+        ],
+      },
+      {
+        name: 'period',
+        description: 'Time period for analytics',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'Today', value: 'today' },
+          { name: 'This Week', value: 'week' },
+          { name: 'This Month', value: 'month' },
+        ],
+      },
+    ],
+    type: 1,
+    integration_types: [0, 1],
+    contexts: [0, 1, 2],
+  },
+  {
+    name: 'daily-tip',
+    description: 'Get a rotating daily educational tip',
+    options: [
+      {
+        name: 'category',
+        description: 'Tip category (optional)',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'MCP Tips', value: 'mcp' },
+          { name: 'AI/LLM Tips', value: 'ai' },
+          { name: 'Docker Tips', value: 'docker' },
+          { name: 'Best Practices', value: 'practices' },
+        ],
+      },
+    ],
+    type: 1,
+    integration_types: [0, 1],
+    contexts: [0, 1, 2],
+  },
+  {
+    name: 'challenge-solver',
+    description: 'Get help solving technical blockers',
+    options: [
+      {
+        name: 'problem',
+        description: 'Describe your technical challenge',
+        type: 3, // STRING
+        required: true,
+        max_length: 500,
+      },
+      {
+        name: 'context',
+        description: 'Additional context (optional)',
+        type: 3, // STRING
+        required: false,
+        max_length: 300,
+      },
+    ],
+    type: 1,
+    integration_types: [0, 1],
+    contexts: [0, 1, 2],
+  },
+  {
+    name: 'ai-insights',
+    description: 'Get AI-powered team insights and recommendations',
+    options: [
+      {
+        name: 'metric',
+        description: 'Which metric to analyze?',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'Team Velocity', value: 'velocity' },
+          { name: 'AI Adoption', value: 'ai-usage' },
+          { name: 'Tool Usage', value: 'tools' },
+          { name: 'Blockers', value: 'blockers' },
         ],
       },
     ],

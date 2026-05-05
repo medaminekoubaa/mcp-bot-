@@ -55,13 +55,7 @@ A powerful Discord bot that combines **AI-powered motivation**, **task tracking*
 - Points system for gamification
 - Achievement badges and descriptions
 
-### 5. **Interactive Games**
-- `/challenge` - Rock-Paper-Scissors with extended options:
-  - Rock, Paper, Scissors (classic)
-  - Lizard, Spock (Rock-Paper-Scissors-Lizard-Spock variant)
-  - Cowboy, Wumpus, Computer, Virus (custom extensions)
-
-### 6. **MCP Development Assistant** *(New Phase 1)*
+### 5. **MCP Development Assistant** *(New Phase 1)*
 - `/dev-update` - Log daily MCP development progress with AI insights
 - `/mcp-learn` - Get learning tips on MCP, Docker, AI/LLM concepts
 - `/team-progress` - View aggregated team MCP analytics
@@ -69,7 +63,7 @@ A powerful Discord bot that combines **AI-powered motivation**, **task tracking*
 - `/challenge-solver` - Get help solving technical blockers
 - `/ai-insights` - Analyze team performance and suggest next steps
 
-### 7. **Legacy Commands**
+### 6. **Legacy Commands**
 - `/test` - Simple hello command for bot verification
 
 ---
@@ -426,12 +420,11 @@ All new MCP commands use optimized system prompts:
 | `/view-streak` | Check your streak | None |
 | `/leaderboard` | Top performers ranking | None |
 
-### Legacy/Game Commands
+### Legacy Commands
 
 | Command | Purpose |
 |---------|---------|
 | `/test` | Bot verification (responds with hello) |
-| `/challenge` | Rock-Paper-Scissors game with extended options |
 
 ---
 
