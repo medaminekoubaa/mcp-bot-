@@ -300,6 +300,29 @@ const MCP_COMMANDS = [
     integration_types: [0, 1],
     contexts: [0, 1, 2],
   },
+  {
+    name: 'ask',
+    description: 'Ask a question in the private AI chat channel',
+    options: [
+      {
+        name: 'question',
+        description: 'Your question about MCP or implementation',
+        type: 3, // STRING
+        required: true,
+        max_length: 1000,
+      },
+      {
+        name: 'context',
+        description: 'Optional additional context',
+        type: 3, // STRING
+        required: false,
+        max_length: 500,
+      },
+    ],
+    type: 1,
+    integration_types: [0, 1],
+    contexts: [0, 1, 2],
+  },
 ];
 
 const ALL_COMMANDS = [...DAILY_TRACKING_COMMANDS, ...LEGACY_COMMANDS, ...MCP_COMMANDS];

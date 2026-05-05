@@ -20,6 +20,7 @@ import { handleChallengeSolver } from './commands/challengeSolver.js';
 import { handleAiInsights } from './commands/aiInsights.js';
 import { handleChat } from './commands/chat.js';
 import { handleChatMessage } from './handlers/chatMessageHandler.js';
+import { handleAsk } from './commands/ask.js';
 
 // Create an express app
 const app = express();
@@ -69,6 +70,9 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
     }
     if (name === 'chat') {
       return await handleChat(req, res);
+    }
+    if (name === 'ask') {
+      return await handleAsk(req, res);
     }
 
     // Route to daily tracking commands

@@ -74,13 +74,12 @@ export async function handleChat(req, res) {
     // Send welcome message to the new channel
     const welcomeEmbed = {
       title: '💬 Welcome to Your Private AI Chat',
-      description: 'You can now discuss MCP and implementation strategies with the AI.',
+      description: 'Use `/ask` command to discuss MCP and implementation with the AI.',
       color: 0x5865F2,
       fields: [
         {
-          name: '📝 What you can do:',
-          value:
-            '• Ask questions about MCP\n• Share screenshots/files for analysis\n• Discuss Career & AIRA implementation\n• Get code review help',
+          name: '📝 How to Ask:',
+          value: 'Use `/ask question: <your question>` to get AI responses.\nExample: `/ask question: How do I implement MCP tools in Career platform?`',
           inline: false,
         },
         {
@@ -90,13 +89,18 @@ export async function handleChat(req, res) {
           inline: false,
         },
         {
-          name: '📤 Supported:',
-          value: 'Text messages, images, files, code snippets',
+          name: '💾 Storage:',
+          value: 'All conversations are saved to a private history for reference',
+          inline: false,
+        },
+        {
+          name: '🔒 Privacy:',
+          value: 'This channel is private - only visible to you',
           inline: false,
         },
       ],
       footer: {
-        text: 'Type your questions below. Channel will be archived after session ends.',
+        text: 'Type /ask followed by your question to start chatting',
       },
     };
 
