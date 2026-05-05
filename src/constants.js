@@ -32,10 +32,17 @@ export const CONSTANTS = {
     URL: process.env.MONGODB_URI || 'mongodb://localhost:27017/mcp-bot',
     DB_NAME: 'mcp-bot',
     COLLECTIONS: {
+      // Original collections
       DAILY_TASKS: 'daily_tasks',
       USER_ACTIVITY: 'user_activity',
       ACHIEVEMENTS: 'achievements',
       TEAM_STATS: 'team_stats',
+      
+      // MCP Development Assistant collections
+      TEAM_MEMBERS: 'team_members',
+      MCP_DEVELOPMENT_LOGS: 'mcp_development_logs',
+      MCP_LEARNING_RESOURCES: 'mcp_learning_resources',
+      MCP_TEAM_ANALYTICS: 'mcp_team_analytics',
     },
     CONNECTION_TIMEOUT: 10000,
     MAX_POOL_SIZE: 10,
@@ -74,6 +81,26 @@ Keep responses under 100 words for voice clarity.`,
 3. Recommended focus areas
 4. Encouraging message for the team
 Keep it concise (3-4 sentences) and constructive.`,
+
+    // MCP Development Assistant Prompts
+    MCP_DEV_INSIGHTS: `You are an MCP (Model Context Protocol) development expert. Analyze this development update and provide:
+1. Technical insights on the work done
+2. MCP tool relevance assessment  
+3. Suggestions for improvement
+4. Recommended next steps
+Keep response under 100 words and constructive.`,
+
+    MCP_CHALLENGE_SOLVER: `You are an expert problem solver for MCP development. The team encountered a challenge:
+{challenge}
+Provide a practical solution considering:
+1. Root cause analysis
+2. Step-by-step solution
+3. Best practices to avoid this in the future
+Keep it concise (3-4 sentences) with actionable advice.`,
+
+    MCP_LEARNING_TIP: `Generate a practical MCP learning tip that helps developers understand MCP concepts better.
+Format: [Concept] - [Simple explanation] - [Example] - [Why it matters]
+Keep under 80 words and beginner-friendly.`,
   },
 
   // Response Templates

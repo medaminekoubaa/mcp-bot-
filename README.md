@@ -1,11 +1,6 @@
-# 🤖 MCP Bot - Discord Team Collaboration & AI Assistant
+# 🤖 MCP Bot - Discord Team Collaboration & Motivation Hub
 
-A professional-grade Discord bot for team collaboration, daily task tracking, achievement management, and AI-powered motivation with Groq integration.
-
-[![Node.js](https://img.shields.io/badge/Node-v18+-green)](https://nodejs.org)
-[![MongoDB](https://img.shields.io/badge/Database-MongoDB-green)](https://www.mongodb.com)
-[![Groq AI](https://img.shields.io/badge/AI-Groq-blue)](https://groq.com)
-[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
+A powerful Discord bot that combines **AI-powered motivation**, **task tracking**, **team statistics**, and **gamification** to keep teams engaged and productive.
 
 ---
 
@@ -13,60 +8,267 @@ A professional-grade Discord bot for team collaboration, daily task tracking, ac
 
 - [Overview](#overview)
 - [Features](#features)
+- [Project Architecture](#project-architecture)
+- [Tech Stack](#tech-stack)
+- [How It Works](#how-it-works)
 - [Project Structure](#project-structure)
-- [Quick Start](#quick-start)
-- [Testing](#testing)
-- [Architecture](#architecture)
-- [API Integration](#api-integration)
-- [Contributing](#contributing)
+- [Installation & Deployment](#installation--deployment)
+- [Commands](#commands)
 
 ---
 
 ## 🎯 Overview
 
-MCP Bot is an intelligent Discord bot designed to help development teams:
-- Track daily tasks and achievements
-- Get AI-powered motivational tips
-- Share tech news about MCP, AI, and frameworks
-- Manage team productivity and collaboration
-- Integrate with Groq AI for intelligent responses
-
-**Tech Stack:**
-- **Runtime:** Node.js 18+
-- **Database:** MongoDB (with Atlas option)
-- **AI:** Groq API (4 keys with automatic rotation)
-- **Framework:** Express.js
-- **Discord:** discord-interactions
+**MCP Bot** is a Discord bot designed to help teams:
+- 📝 **Track daily tasks** with automatic streak counting
+- 🤖 **Get AI-powered motivation** using Groq's LLaMA model
+- 📊 **View team statistics** and leaderboards
+- 🎮 **Play interactive games** (Rock-Paper-Scissors with extended options)
+- 🏆 **Unlock achievements** and earn points
+- 💾 **Store all data** securely in MongoDB Atlas
 
 ---
 
 ## ✨ Features
 
-### ✅ Core Features (Phase 1 - Built)
-- [x] Groq API service with 4-key rotation & auto-failover
-- [x] MongoDB database layer with CRUD operations
-- [x] Professional logging system
-- [x] Data validation & schemas
-- [x] 27+ automated tests (100% pass rate)
-- [x] **Daily Tracking Commands** (4 commands)
-  - `/task-completed` - Log completed tasks with streaks
-  - `/yesterday-summary` - AI-powered work summaries
-  - `/today-plan` - Daily planning with suggestions
-  - `/get-motivation` - Motivation tips & tech news
-- [x] **Team Collaboration** (3 commands)
-  - `/team-stats` - Team statistics dashboard
-  - `/leaderboard` - Global rankings & daily top performers
-  - `/view-streak` - Personal streak tracking
-- [x] **Achievement System**
-  - Streak tracking (3, 7, 14, 30, 60, 100 day milestones)
-  - Automatic milestone achievements with bonus points
-  - Personal achievement history
+### 1. **Daily Task Tracking**
+- Log completed tasks with `/task-completed`
+- Categorize tasks (coding, documentation, review, testing, deployment)
+- Add detailed descriptions for each task
+- Automatic streak tracking (consecutive days of activity)
+- Milestone achievements unlock at 3, 7, 14, 30+ day streaks
 
-### 🚀 Upcoming Features (Phase 2-3)
-- [ ] Voice channel integration
-- [ ] Team statistics dashboard
-- [ ] Advanced achievement system with streaks
-- [ ] Scheduled daily reminders
+### 2. **AI-Powered Motivation**
+- `/get-motivation` - Generates personalized motivation from Groq LLaMA AI
+- System-driven context-aware messages
+- Caching system to optimize API usage and reduce costs
+
+### 3. **Team Statistics**
+- `/team-stats` - View aggregated team productivity metrics
+- `/yesterday-summary` - AI-powered summary of team's previous day
+- `/today-plan` - AI-assisted planning for today's work
+- `/leaderboard` - Ranking of top performers
+
+### 4. **Streak & Achievements**
+- `/view-streak` - Personal streak counter (current & longest)
+- Milestone achievements: 3-day, 7-day, 14-day, 30-day, 60-day streaks
+- Points system for gamification
+- Achievement badges and descriptions
+
+### 5. **Interactive Games**
+- `/challenge` - Rock-Paper-Scissors with extended options:
+  - Rock, Paper, Scissors (classic)
+  - Lizard, Spock (Rock-Paper-Scissors-Lizard-Spock variant)
+  - Cowboy, Wumpus, Computer, Virus (custom extensions)
+
+### 6. **Legacy Commands**
+- `/test` - Simple hello command for bot verification
+
+---
+
+## 🏗️ Project Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│             Discord Server (WebSocket)              │
+└─────────────────┬───────────────────────────────────┘
+                  │
+                  │ HTTP POST /interactions
+                  │ (Slash Commands, Button Clicks)
+                  ▼
+┌─────────────────────────────────────────────────────┐
+│        Express Server (Node.js on port 3000)        │
+│                  app.js                             │
+│  - Verifies Discord signatures                      │
+│  - Routes command types                             │
+│  - Handles interactions                             │
+└─────────┬──────────────────────────────────┬────────┘
+          │                                  │
+          ▼                                  ▼
+   ┌─────────────────┐           ┌──────────────────────┐
+   │   commands.js   │           │     game.js          │
+   │                 │           │                      │
+   │ - Task logging  │           │ - Rock-Paper-Scissors│
+   │ - Summaries     │           │ - Game logic         │
+   │ - Motivation    │           │ - Win/Loss/Tie calc  │
+   │ - Team stats    │           └──────────────────────┘
+   │ - Achievements  │
+   └────────┬────────┘
+            │
+            ├─────────────────┬──────────────────┬─────────────────┐
+            │                 │                  │                 │
+            ▼                 ▼                  ▼                 ▼
+    ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+    │mongodbService│  │groqService   │  │logger        │  │constants     │
+    │              │  │              │  │              │  │              │
+    │- Connect DB  │  │- AI Requests │  │- Log events  │  │- Config      │
+    │- Queries     │  │- Key Rotation│  │- Error track │  │- Prompts     │
+    │- Caching     │  │- Caching     │  │- Audit logs  │  │- Settings    │
+    │- Indexes     │  │- Retry logic │  │              │  │              │
+    └──────┬───────┘  └──────┬───────┘  └──────────────┘  └──────────────┘
+           │                 │
+           ▼                 ▼
+    ┌──────────────────┐  ┌──────────────────┐
+    │ MongoDB Atlas    │  │ Groq AI API      │
+    │ (Cloud)          │  │ (LLaMA 3.3-70B)  │
+    │                  │  │                  │
+    │ Collections:     │  │ 4 API keys       │
+    │- daily_tasks     │  │ Auto-rotation    │
+    │- user_activity   │  │ Quota handling   │
+    │- achievements    │  │                  │
+    │- team_stats      │  │                  │
+    └──────────────────┘  └──────────────────┘
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Runtime** | Node.js (v18+) | JavaScript runtime |
+| **Framework** | Express.js | HTTP server & routing |
+| **Discord Integration** | discord-interactions | Signature verification & types |
+| **AI/LLM** | Groq API (LLaMA 3.3-70B) | Motivation & summaries |
+| **Database** | MongoDB Atlas | Document storage |
+| **Logger** | Custom Logger | Event tracking |
+| **Hosting** | Render.com | Production deployment |
+
+---
+
+## 🔄 How It Works - Complete Flow
+
+### **1. User Interaction Flow**
+
+```
+User Types Command in Discord
+    │
+    ├─► Discord verifies bot permissions
+    │
+    ├─► Discord POSTs to: /interactions endpoint (with signature)
+    │
+    ├─► Express receives request
+    │
+    ├─► discord-interactions middleware verifies signature
+    │
+    ├─► Interaction type determined (PING, COMMAND, COMPONENT)
+    │
+    ├─► Router directs to appropriate handler
+    │
+    ├─► Handler processes & calls services
+    │
+    ├─► Response sent back to Discord within 3 second window
+    │
+    └─► User sees bot response in channel
+```
+
+### **2. Example: `/task-completed` Command**
+
+```
+1. User types: /task-completed task_name: "Build API" category: "coding"
+
+2. Discord sends:
+   POST /interactions
+   {
+     "type": 2,
+     "data": {
+       "name": "task-completed",
+       "options": [
+         {"name": "task_name", "value": "Build API"},
+         {"name": "category", "value": "coding"}
+       ]
+     },
+     "member": {"user": {"id": "123456789", "username": "alice"}}
+   }
+
+3. Bot processes:
+   ├─ Parse command options
+   ├─ MongoDB: Save task to daily_tasks collection
+   ├─ MongoDB: Log activity to user_activity
+   ├─ MongoDB: Update streak (increment or reset)
+   ├─ Check for milestone achievements (3, 7, 14, 30 days)
+   ├─ Record achievements if unlocked
+   ├─ Fetch user stats (total points, achievements)
+   └─ Build response message with stats
+
+4. Bot responds:
+   {
+     "type": 4,
+     "data": {
+       "content": "Great work, alice! 🎉\n\n**Task:** Build API\n**Category:** coding\n\n📊 **Your Stats:**\n• Total Points: 50\n• Achievements: 2\n• 🔥 Current Streak: 3 days!"
+     }
+   }
+
+5. Discord displays response in channel
+```
+
+### **3. Example: `/get-motivation` Command**
+
+```
+1. User types: /get-motivation
+
+2. Bot receives command
+
+3. Check cache (avoid API calls):
+   ├─ If cached & fresh (< 1 hour old) → Return cached response
+   └─ If no cache → Continue to step 4
+
+4. Call Groq AI API:
+   ├─ Attempt with API key 1
+   ├─ If quota error → Rotate to key 2
+   ├─ If key 2 quota → Rotate to key 3
+   ├─ Continue rotation until response
+   ├─ Parse AI response
+   └─ Cache result (1 hour TTL)
+
+5. Format and send to user:
+   {
+     "type": 4,
+     "data": {
+       "content": "[AI Generated Motivation Message]"
+     }
+   }
+```
+
+### **4. Database Operations Example**
+
+**When user logs a task:**
+
+```javascript
+// MongoDB Collections involved:
+
+1. daily_tasks collection
+   {
+     _id: ObjectId,
+     userId: "123456789",
+     taskName: "Build API",
+     details: "Implemented REST endpoints",
+     category: "coding",
+     date: "2026-05-05",
+     status: "completed",
+     createdAt: 2026-05-05T12:30:00Z
+   }
+
+2. user_activity collection
+   {
+     _id: ObjectId,
+     userId: "123456789",
+     action: "task_logged",
+     metadata: {taskName: "Build API", category: "coding"},
+     timestamp: 2026-05-05T12:30:00Z
+   }
+
+3. achievements collection (if milestone unlocked)
+   {
+     _id: ObjectId,
+     userId: "123456789",
+     title: "🔥 3-Day Streak",
+     description: "Logged tasks for 3 consecutive days",
+     points: 50,
+     category: "milestone",
+     unlockedAt: 2026-05-05T12:30:00Z
+   }
+```
 
 ---
 
@@ -74,308 +276,194 @@ MCP Bot is an intelligent Discord bot designed to help development teams:
 
 ```
 mcp-bot/
-├── src/                              # Source code
-│   ├── app.js                        # Main bot entry point
-│   ├── commands.js                   # Discord command definitions
-│   ├── constants.js                  # Configuration & system prompts
-│   ├── game.js                       # Game logic (template)
-│   ├── utils.js                      # Utility functions
-│   ├── services/                     # Business logic services
-│   │   ├── groqService.js           # Groq AI wrapper (4-key rotation)
-│   │   ├── mongodbService.js        # Database operations
-│   │   └── logger.js                # Logging system
-│   └── models/                       # Data schemas & validation
-│       └── dataModels.js            # Schema definitions
+├── src/
+│   ├── app.js                          # Main Express server & Discord interactions
+│   ├── commands.js                     # Command handlers (task, summary, motivation, etc.)
+│   ├── game.js                         # Rock-Paper-Scissors game logic
+│   ├── register-commands.js            # Register commands with Discord
+│   ├── utils.js                        # Discord API utilities
+│   ├── constants.js                    # Config, prompts, settings
+│   │
+│   ├── models/
+│   │   └── dataModels.js              # Database schema definitions
+│   │
+│   └── services/
+│       ├── groqService.js             # AI/LLM service (Groq API)
+│       ├── mongodbService.js          # Database service
+│       └── logger.js                  # Logging & event tracking
 │
-├── tests/                            # Testing suite
-│   ├── test.js                      # 27+ automated tests
-│   ├── check-prerequisites.sh       # Prerequisites checker
-│   └── README.md                    # Testing guide
+├── tests/
+│   ├── test.js                        # Integration tests
+│   └── check-prerequisites.sh         # Environment validation
 │
-├── docs/                             # Documentation
-│   ├── README.md                    # This file
-│   ├── ARCHITECTURE.md              # System architecture
-│   ├── SETUP.md                     # Setup guide
-│   ├── TESTING_GUIDE.md             # Detailed testing
-│   ├── MONGODB_SETUP.md             # Database setup
-│   ├── API.md                       # API reference
-│   └── TESTING_START_HERE.md        # Quick test guide
+├── docs/
+│   ├── TESTING.md                     # Testing guide & usage
+│   └── (other documentation)
 │
-├── assets/                           # Images & resources
-├── examples/                         # Example code snippets
-├── .env                             # Environment variables (created)
-├── .env.sample                      # Environment template
-├── .gitignore                       # Git ignore rules
-├── package.json                     # Node.js dependencies
-└── README.md                        # This file
+├── .env                               # Environment variables (Discord, Groq, MongoDB)
+├── .env.sample                        # Template for .env
+├── .gitignore                         # Git ignore rules
+├── package.json                       # Node dependencies
+├── README.md                          # This file
+│
+└── assets/
+    └── (images, logos)
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Installation & Deployment
 
-### Prerequisites
-- Node.js 18+ ([download](https://nodejs.org))
-- MongoDB ([local](https://www.mongodb.com/docs/manual/installation/) or [Atlas](https://www.mongodb.com/cloud/atlas))
-- Discord Bot Token ([create app](https://discord.com/developers/applications))
-
-### 1. Clone & Install
+### **Local Development**
 
 ```bash
-# Navigate to project
-cd /home/needaimdark/Desktop/mcp-bot
+# 1. Clone repository
+git clone <repository-url>
+cd mcp-bot
 
-# Install dependencies
+# 2. Install dependencies
 npm install
-```
 
-### 2. Configure Environment
-
-```bash
-# Copy environment template
+# 3. Configure environment
 cp .env.sample .env
+# Edit .env with your Discord token, Groq keys, MongoDB URI
 
-# Edit .env with your credentials
-nano .env
-```
-
-Required variables:
-```env
-APP_ID=your_app_id
-DISCORD_TOKEN=your_bot_token
-PUBLIC_KEY=your_public_key
-GROQ_API_KEY_1=your_groq_key_1
-GROQ_API_KEY_2=your_groq_key_2
-GROQ_API_KEY_3=your_groq_key_3
-GROQ_API_KEY_4=your_groq_key_4
-MONGODB_URI=mongodb://localhost:27017/mcp-bot
-```
-
-### 3. Start MongoDB
-
-```bash
-# Local MongoDB
-sudo systemctl start mongod
-
-# Or use MongoDB Atlas - update MONGODB_URI in .env
-```
-
-### 4. Run Tests
-
-```bash
-# Check prerequisites
-bash tests/check-prerequisites.sh
-
-# Run full test suite
-npm run test
-```
-
-Expected: **27/27 tests passing (100%)**
-
-### 5. Start the Bot
-
-```bash
-# Development mode (auto-reload)
-npm run dev
-
-# Production mode
-npm start
-```
-
----
-
-## 🧪 Testing
-
-Complete testing documentation in [docs/TESTING_START_HERE.md](docs/TESTING_START_HERE.md)
-
-### Quick Test
-
-```bash
-# Check all prerequisites
-bash tests/check-prerequisites.sh
-
-# Run all 27 tests
-npm run test
-
-# Expected output
-# 🎉 ALL TESTS PASSED! Ready for development.
-# Total Tests: 27
-# ✓ Passed: 27
-# ✗ Failed: 0
-# Success Rate: 100.0%
-```
-
-### Test Coverage
-
-| Component | Tests | Status |
-|-----------|-------|--------|
-| Constants | 5 | ✅ Pass |
-| Logger | 3 | ✅ Pass |
-| Validation | 3 | ✅ Pass |
-| Groq Service | 5 | ✅ Pass |
-| MongoDB | 11 | ✅ Pass |
-| **Total** | **27** | **✅ Pass** |
-
----
-
-## 🏗️ Architecture
-
-### Service Architecture
-
-```
-Discord Bot
-     ↓
-Express Server (Port 3000)
-     ↓
-┌────────────────────────────────────┐
-│     Command Handler                │
-│  - task-completed                  │
-│  - yesterday-summary               │
-│  - today-plan                      │
-│  - get-motivation                  │
-└────────────────────────────────────┘
-     ↓
-┌────────────────────────────────────┐
-│  Services Layer                    │
-├────────────────────────────────────┤
-│ • GroqService (AI)                 │
-│ • MongoDBService (Data)            │
-│ • Logger (Logging)                 │
-└────────────────────────────────────┘
-     ↓
-┌────────────────────────────────────┐
-│  External APIs                     │
-├────────────────────────────────────┤
-│ • Groq API (4 keys, rotation)      │
-│ • MongoDB (connection pool)        │
-│ • Discord API                      │
-└────────────────────────────────────┘
-```
-
-### Data Flow
-
-```
-User Command
-    ↓
-Discord Bot
-    ↓
-GroqService (get AI response)
-    ↓
-MongoDBService (save task/activity)
-    ↓
-Logger (log all operations)
-    ↓
-Response sent to Discord
-```
-
----
-
-## 🔐 Key Features
-
-### Groq API Management
-- **4 API Keys** with automatic rotation
-- **Intelligent Failover** - automatically switches if quota exceeded
-- **Caching** - reduces API calls
-- **Quota Tracking** - 24-hour wait before retrying
-
-### MongoDB Operations
-- **Connection Pooling** (2-10 connections)
-- **Automatic Indexes** for performance
-- **TTL Collections** (auto-cleanup after 30 days)
-- **Aggregation Pipelines** for analytics
-
-### Professional Code
-- **Zero Hardcoding** - all strings in constants
-- **Service Abstraction** - clean separation of concerns
-- **Error Handling** - retry logic, fallbacks
-- **Logging** - color-coded, timestamped
-- **Validation** - schema validation on all data
-
----
-
-## 📖 Documentation
-
-- **[README.md](README.md)** - Project overview (this file)
-- **[COMMANDS.md](docs/COMMANDS.md)** - Daily tracking commands guide
-- **[SETUP.md](docs/SETUP.md)** - Detailed setup instructions
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design
-- **[TESTING_GUIDE.md](docs/TESTING_GUIDE.md)** - Testing procedures
-- **[MONGODB_SETUP.md](docs/MONGODB_SETUP.md)** - Database setup
-- **[API.md](docs/API.md)** - API reference
-
----
-
-## 🛠️ Development
-
-### Scripts
-
-```bash
-# Start bot (production)
-npm start
-
-# Start bot (development with auto-reload)
-npm run dev
-
-# Register slash commands
+# 4. Register commands with Discord
 npm run register
 
-# Run tests
-npm run test
-
-# Check prerequisites
-bash tests/check-prerequisites.sh
+# 5. Start bot
+npm start
 ```
 
-### Project Standards
+### **Render Deployment** (Production)
 
-- ✅ No hardcoded strings (use constants.js)
-- ✅ Services for external integrations
-- ✅ Validation on all inputs
-- ✅ Comprehensive logging
-- ✅ Error handling with retries
-- ✅ JSDoc comments on functions
-- ✅ 100% test coverage for services
+1. Push to GitHub
+2. Connect GitHub repo to Render
+3. Set environment variables in Render dashboard
+4. Deploy (auto-redeploy on push)
+
+**Set Discord Interactions Endpoint URL:**
+- Discord Developer Portal → General Information
+- Interactions Endpoint URL: `https://mcp-bot-azzk.onrender.com/interactions`
 
 ---
 
-## 🚀 Next Phase
+## 🎮 Commands Reference
 
-1. **Voice Integration** ✨
-   - Voice channel support
-   - Audio conversations
-   - Transcription & responses
+### Daily Tracking Commands
 
-2. **Advanced Features**
-   - Team statistics dashboard
-   - Achievement streaks & milestones
-   - Scheduled daily reminders
+| Command | Purpose | Options |
+|---------|---------|---------|
+| `/task-completed` | Log a completed task | `task_name*`, `details`, `category` |
+| `/yesterday-summary` | AI summary of yesterday's work | None |
+| `/today-plan` | AI-assisted plan for today | None |
+| `/get-motivation` | Get personalized AI motivation | None |
+| `/team-stats` | View team statistics | None |
+| `/view-streak` | Check your streak | None |
+| `/leaderboard` | Top performers ranking | None |
 
-3. **Production Deployment**
-   - Docker containerization
-   - Cloud hosting setup
-   - Monitoring & alerting
+### Legacy/Game Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/test` | Bot verification (responds with hello) |
+| `/challenge` | Rock-Paper-Scissors game with extended options |
+
+---
+
+## 🔑 Environment Variables
+
+```env
+# Discord Configuration
+DISCORD_TOKEN=your_bot_token_here
+APP_ID=your_app_id
+PUBLIC_KEY=your_public_key
+
+# Groq API Keys (Rotation Support)
+GROQ_API_KEY_1=gsk_xxxxx
+GROQ_API_KEY_2=gsk_xxxxx
+GROQ_API_KEY_3=gsk_xxxxx
+GROQ_API_KEY_4=gsk_xxxxx
+
+# MongoDB
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/db
+
+# Server Configuration
+PORT=3000
+NODE_ENV=production
+
+# Logging
+LOG_LEVEL=INFO
+ENABLE_CONSOLE_LOG=true
+```
+
+---
+
+## 📊 Data Models
+
+### Task Document
+```javascript
+{
+  userId: String,           // Discord user ID
+  taskName: String,         // Task title (max 100 chars)
+  details: String,          // Optional description (max 500 chars)
+  category: String,         // coding|documentation|review|testing|deployment|other
+  date: String,             // YYYY-MM-DD format
+  status: String,           // completed|in-progress|pending
+  createdAt: Date           // Timestamp
+}
+```
+
+### User Streak
+```javascript
+{
+  userId: String,
+  currentStreak: Number,    // Days in current streak
+  longestStreak: Number,    // Historical longest streak
+  lastTaskDate: String,     // Last task completion date
+  updatedAt: Date
+}
+```
+
+### Achievement
+```javascript
+{
+  userId: String,
+  title: String,            // Achievement name
+  description: String,      // Details
+  points: Number,           // Points awarded
+  category: String,         // milestone|badge|other
+  unlockedAt: Date
+}
+```
+
+---
+
+## 🐛 Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| **Bot not responding in Discord** | Check Interactions Endpoint URL in Discord Developer Portal |
+| **MongoDB connection fails** | Verify connection string, IP whitelist, and credentials |
+| **Groq API errors** | Check API keys, model availability, quota limits |
+| **Commands not showing up** | Run `npm run register` to re-register commands |
+| **Signature verification failed** | Verify PUBLIC_KEY in `.env` matches Discord portal |
 
 ---
 
 ## 📝 License
 
-MIT License - see [LICENSE](LICENSE) file
+MIT License - See LICENSE file for details
 
 ---
 
-## 👥 Contributing
+## 👥 Support & Contributions
 
-This is a team project for MCP development. Follow the code standards above.
-
----
-
-## 📞 Support
-
-- **Documentation:** See [docs/](docs/) folder
-- **Tests:** Run `npm run test`
-- **Issues:** Check [tests/test.js](tests/test.js)
+For issues, questions, or contributions:
+- Create an issue on GitHub
+- Submit pull requests with improvements
+- Test thoroughly before deployment
 
 ---
 
-**Last Updated:** May 5, 2026  
-**Status:** Phase 1 Complete ✅ | 7 Commands Ready 🎉 | Production Ready 🚀
+**Made with ❤️ by the MCP Bot Team**
