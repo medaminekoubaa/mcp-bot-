@@ -43,6 +43,9 @@ export const CONSTANTS = {
       MCP_DEVELOPMENT_LOGS: 'mcp_development_logs',
       MCP_LEARNING_RESOURCES: 'mcp_learning_resources',
       MCP_TEAM_ANALYTICS: 'mcp_team_analytics',
+      
+      // AI Chat Sessions
+      AI_CHAT_SESSIONS: 'ai_chat_sessions',
     },
     CONNECTION_TIMEOUT: 10000,
     MAX_POOL_SIZE: 10,

@@ -18,6 +18,8 @@ import { handleTeamProgress } from './commands/teamProgress.js';
 import { handleDailyTip } from './commands/dailyTip.js';
 import { handleChallengeSolver } from './commands/challengeSolver.js';
 import { handleAiInsights } from './commands/aiInsights.js';
+import { handleChat } from './commands/chat.js';
+import { handleChatMessage } from './handlers/chatMessageHandler.js';
 
 // Create an express app
 const app = express();
@@ -64,6 +66,9 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
     }
     if (name === 'ai-insights') {
       return await handleAiInsights(req, res);
+    }
+    if (name === 'chat') {
+      return await handleChat(req, res);
     }
 
     // Route to daily tracking commands

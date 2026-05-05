@@ -851,6 +851,112 @@ class MongoDBService {
       throw error;
     }
   }
+
+  /**
+   * Create a new AI chat session
+   * @param {Object} sessionData - Session info { userId, userName, discordChannelId, channelName }
+   * @returns {Promise<Object>} Session document with _id
+   */
+  async createChatSession(sessionData) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.AI_CHAT_SESSIONS);
+      const session = {
+        userId: sessionData.userId,
+        userName: sessionData.userName,
+        discordChannelId: sessionData.discordChannelId,
+        channelName: sessionData.channelName,
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        closed: false,
+      };
+      const result = await collection.insertOne(session);
+      session._id = result.insertedId;
+      return session;
+    } catch (error) {
+      console.error('[MongoDB] Error creating chat session:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Save message to chat session
+   * @param {string} sessionId - Session ID
+   * @param {Object} messageData - { role, content, timestamp, attachments }
+   * @returns {Promise<void>}
+   */
+  async addMessageToSession(sessionId, messageData) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.AI_CHAT_SESSIONS);
+      await collection.updateOne(
+        { _id: new ObjectId(sessionId) },
+        {
+          $push: {
+            messages: {
+              role: messageData.role, // 'user' or 'assistant'
+              content: messageData.content,
+              timestamp: new Date(),
+              attachments: messageData.attachments || [],
+            },
+          },
+          $set: { updatedAt: new Date() },
+        }
+      );
+    } catch (error) {
+      console.error('[MongoDB] Error adding message to session:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get chat session by channel ID
+   * @param {string} discordChannelId - Discord channel ID
+   * @returns {Promise<Object|null>} Session document
+   */
+  async getChatSessionByChannelId(discordChannelId) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.AI_CHAT_SESSIONS);
+      return await collection.findOne({ discordChannelId, closed: false });
+    } catch (error) {
+      console.error('[MongoDB] Error fetching chat session:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all active chat sessions for a user
+   * @param {string} userId - Discord user ID
+   * @returns {Promise<Array>} Array of session documents
+   */
+  async getUserChatSessions(userId) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.AI_CHAT_SESSIONS);
+      return await collection.find({ userId, closed: false }).sort({ createdAt: -1 }).toArray();
+    } catch (error) {
+      console.error('[MongoDB] Error fetching user chat sessions:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Close a chat session
+   * @param {string} sessionId - Session ID
+   * @returns {Promise<void>}
+   */
+  async closeChatSession(sessionId) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.AI_CHAT_SESSIONS);
+      await collection.updateOne(
+        { _id: new ObjectId(sessionId) },
+        {
+          $set: { closed: true, closedAt: new Date() },
+        }
+      );
+    } catch (error) {
+      console.error('[MongoDB] Error closing chat session:', error.message);
+      throw error;
+    }
+  }
 }
 
 export default new MongoDBService();

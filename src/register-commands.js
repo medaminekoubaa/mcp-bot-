@@ -86,6 +86,13 @@ const DAILY_TRACKING_COMMANDS = [
     integration_types: [0, 1],
     contexts: [0, 1, 2],
   },
+  {
+    name: 'chat',
+    description: 'Start a private AI chat session about MCP and implementation',
+    type: 1,
+    integration_types: [0, 1],
+    contexts: [0, 1, 2],
+  },
 ];
 
 // Legacy commands (kept for compatibility)
