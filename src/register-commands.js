@@ -119,10 +119,79 @@ const LEGACY_COMMANDS = [
   },
 ];
 
-const ALL_COMMANDS = [...DAILY_TRACKING_COMMANDS, ...LEGACY_COMMANDS];
+// MCP Development Assistant Commands
+const MCP_COMMANDS = [
+  {
+    name: 'dev-update',
+    description: 'Log your daily development progress on MCP projects',
+    options: [
+      {
+        name: 'project',
+        description: 'Which project are you working on?',
+        type: 3, // STRING
+        required: true,
+        choices: [
+          { name: 'Career', value: 'Career' },
+          { name: 'AIRA', value: 'AIRA' },
+        ],
+      },
+      {
+        name: 'task_category',
+        description: 'What type of work did you do?',
+        type: 3, // STRING
+        required: true,
+        choices: [
+          { name: 'Feature Development', value: 'feature' },
+          { name: 'Bug Fix', value: 'bug-fix' },
+          { name: 'Documentation', value: 'documentation' },
+          { name: 'Research', value: 'research' },
+          { name: 'Testing', value: 'testing' },
+        ],
+      },
+      {
+        name: 'description',
+        description: 'Describe what you accomplished',
+        type: 3, // STRING
+        required: true,
+        max_length: 1000,
+      },
+      {
+        name: 'mcp_tools',
+        description: 'MCP tools you worked on (comma-separated, optional)',
+        type: 3, // STRING
+        required: false,
+        max_length: 300,
+      },
+      {
+        name: 'challenges',
+        description: 'Challenges you faced (optional)',
+        type: 3, // STRING
+        required: false,
+        max_length: 500,
+      },
+      {
+        name: 'status',
+        description: 'Current status of the work',
+        type: 3, // STRING
+        required: false,
+        choices: [
+          { name: 'Completed', value: 'completed' },
+          { name: 'In Progress', value: 'in-progress' },
+          { name: 'Blocked', value: 'blocked' },
+        ],
+      },
+    ],
+    type: 1,
+    integration_types: [0, 1],
+    contexts: [0, 1, 2],
+  },
+];
+
+const ALL_COMMANDS = [...DAILY_TRACKING_COMMANDS, ...LEGACY_COMMANDS, ...MCP_COMMANDS];
 
 console.log('📋 Registering Discord commands...');
 console.log(`📝 Daily Tracking Commands: ${DAILY_TRACKING_COMMANDS.length}`);
+console.log(`📝 MCP Commands: ${MCP_COMMANDS.length}`);
 console.log(`📝 Legacy Commands: ${LEGACY_COMMANDS.length}`);
 console.log(`📝 Total Commands: ${ALL_COMMANDS.length}`);
 

@@ -15,6 +15,7 @@ import mongodbService from './services/mongodbService.js';
 import groqService from './services/groqService.js';
 import logger from './services/logger.js';
 import { handleCommand } from './commands.js';
+import { handleDevUpdate } from './commands/devUpdate.js';
 
 // Create an express app
 const app = express();
@@ -44,6 +45,11 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async fun
    */
   if (type === InteractionType.APPLICATION_COMMAND) {
     const { name } = data;
+
+    // Route to MCP development commands
+    if (name === 'dev-update') {
+      return await handleDevUpdate(req, res);
+    }
 
     // Route to daily tracking commands
     if (['task-completed', 'yesterday-summary', 'today-plan', 'get-motivation', 'team-stats', 'view-streak', 'leaderboard'].includes(name)) {

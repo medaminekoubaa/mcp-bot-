@@ -599,6 +599,258 @@ class MongoDBService {
   isConnected() {
     return this.connected;
   }
+
+  /**
+   * ============================================
+   * MCP DEVELOPMENT ASSISTANT OPERATIONS
+   * ============================================
+   */
+
+  /**
+   * Log a development update
+   * @param {string} discordId - Discord user ID
+   * @param {Object} devUpdateData - Update details
+   * @returns {Promise<Object>} Created development log
+   */
+  async logMCPDevelopmentUpdate(discordId, devUpdateData) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.MCP_DEVELOPMENT_LOGS);
+
+      const devLog = {
+        discordId,
+        date: new Date(),
+        project: devUpdateData.project || 'Career', // 'Career' or 'AIRA'
+        taskCategory: devUpdateData.taskCategory || 'feature', // feature, bug-fix, documentation, research, testing
+        taskDescription: devUpdateData.taskDescription,
+        mcp_tools_involved: devUpdateData.mcpTools || [],
+        artifacts: {
+          screenshots: devUpdateData.screenshots || [],
+          code_snippets: devUpdateData.codeSnippets || [],
+          documentation: devUpdateData.documentation || '',
+        },
+        challenges: devUpdateData.challenges || '',
+        solutions: devUpdateData.solutions || '',
+        ai_used: devUpdateData.aiUsed || false,
+        ai_tools: devUpdateData.aiTools || [],
+        learnings: devUpdateData.learnings || '',
+        status: devUpdateData.status || 'completed', // completed, in-progress, blocked
+        blockedReason: devUpdateData.blockedReason || '',
+        timestamps: {
+          logged: new Date(),
+          updated: new Date(),
+        },
+      };
+
+      const result = await collection.insertOne(devLog);
+      console.log(`[MongoDB] MCP Development log created for user ${discordId}`);
+      return { _id: result.insertedId, ...devLog };
+    } catch (error) {
+      console.error('[MongoDB] Error logging MCP development update:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get MCP development logs for a user (with optional filters)
+   * @param {string} discordId - Discord user ID
+   * @param {Object} filters - Optional filters (project, taskCategory, dateRange)
+   * @returns {Promise<Array>} Development logs
+   */
+  async getMCPDevelopmentLogs(discordId, filters = {}) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.MCP_DEVELOPMENT_LOGS);
+
+      const query = { discordId };
+
+      if (filters.project) {
+        query.project = filters.project;
+      }
+
+      if (filters.taskCategory) {
+        query.taskCategory = filters.taskCategory;
+      }
+
+      if (filters.startDate && filters.endDate) {
+        query.date = {
+          $gte: filters.startDate,
+          $lt: filters.endDate,
+        };
+      }
+
+      const logs = await collection
+        .find(query)
+        .sort({ date: -1 })
+        .limit(filters.limit || 50)
+        .toArray();
+
+      return logs;
+    } catch (error) {
+      console.error('[MongoDB] Error fetching MCP development logs:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get team MCP statistics for analytics
+   * @param {Object} filters - Optional filters (project, period)
+   * @returns {Promise<Object>} Team analytics summary
+   */
+  async getTeamMCPAnalytics(filters = {}) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.MCP_DEVELOPMENT_LOGS);
+
+      const startDate = filters.startDate || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Last 7 days
+      const endDate = filters.endDate || new Date();
+
+      const query = {
+        date: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      };
+
+      if (filters.project) {
+        query.project = filters.project;
+      }
+
+      // Aggregate statistics
+      const stats = await collection
+        .aggregate([
+          { $match: query },
+          {
+            $facet: {
+              summary: [
+                {
+                  $group: {
+                    _id: null,
+                    totalLogs: { $sum: 1 },
+                    completedTasks: {
+                      $sum: {
+                        $cond: [{ $eq: ['$status', 'completed'] }, 1, 0],
+                      },
+                    },
+                    blockedTasks: {
+                      $sum: {
+                        $cond: [{ $eq: ['$status', 'blocked'] }, 1, 0],
+                      },
+                    },
+                    aiUsageCount: {
+                      $sum: {
+                        $cond: ['$ai_used', 1, 0],
+                      },
+                    },
+                  },
+                },
+              ],
+              toolUsage: [
+                { $unwind: '$mcp_tools_involved' },
+                {
+                  $group: {
+                    _id: '$mcp_tools_involved',
+                    count: { $sum: 1 },
+                  },
+                },
+                { $sort: { count: -1 } },
+              ],
+              categoryBreakdown: [
+                {
+                  $group: {
+                    _id: '$taskCategory',
+                    count: { $sum: 1 },
+                  },
+                },
+              ],
+            },
+          },
+        ])
+        .toArray();
+
+      return stats[0];
+    } catch (error) {
+      console.error('[MongoDB] Error fetching team MCP analytics:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Add a learning resource
+   * @param {Object} resourceData - Learning resource details
+   * @returns {Promise<Object>} Created resource
+   */
+  async addLearningResource(resourceData) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.MCP_LEARNING_RESOURCES);
+
+      const resource = {
+        category: resourceData.category, // MCP, Docker, AI-LLM, Tools, Architecture
+        title: resourceData.title,
+        description: resourceData.description,
+        content: resourceData.content, // Markdown formatted
+        code_example: resourceData.codeExample || '',
+        difficulty: resourceData.difficulty || 'intermediate', // beginner, intermediate, advanced
+        project: resourceData.project || 'General',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        views: 0,
+        tags: resourceData.tags || [],
+      };
+
+      const result = await collection.insertOne(resource);
+      console.log(`[MongoDB] Learning resource added: ${resourceData.title}`);
+      return { _id: result.insertedId, ...resource };
+    } catch (error) {
+      console.error('[MongoDB] Error adding learning resource:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get learning resources by category and difficulty
+   * @param {string} category - Resource category
+   * @param {string} difficulty - Difficulty level (optional)
+   * @returns {Promise<Array>} Learning resources
+   */
+  async getLearningResources(category, difficulty = null) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.MCP_LEARNING_RESOURCES);
+
+      const query = { category };
+      if (difficulty) {
+        query.difficulty = difficulty;
+      }
+
+      const resources = await collection
+        .find(query)
+        .sort({ createdAt: -1 })
+        .toArray();
+
+      return resources;
+    } catch (error) {
+      console.error('[MongoDB] Error fetching learning resources:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Update learning resource view count
+   * @param {ObjectId} resourceId - Resource ID
+   * @returns {Promise<void>}
+   */
+  async incrementResourceViews(resourceId) {
+    try {
+      const collection = this.db.collection(CONSTANTS.MONGODB.COLLECTIONS.MCP_LEARNING_RESOURCES);
+      await collection.updateOne(
+        { _id: new ObjectId(resourceId) },
+        {
+          $inc: { views: 1 },
+          $set: { updatedAt: new Date() },
+        }
+      );
+    } catch (error) {
+      console.error('[MongoDB] Error updating resource views:', error.message);
+      throw error;
+    }
+  }
 }
 
 export default new MongoDBService();

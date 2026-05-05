@@ -6,6 +6,7 @@
 
 import fetch from 'node-fetch';
 import { CONSTANTS } from '../constants.js';
+import systemContextLoader from './systemContextLoader.js';
 
 class GroqService {
   constructor() {
@@ -179,6 +180,51 @@ class GroqService {
     this.cache.clear();
     console.log('[GroqService] Cache cleared');
   }
+
+  /**
+   * Execute MCP-specific request with system context
+   * Uses systemContextLoader for optimized prompts
+   * @param {string} userMessage - User's message/task description
+   * @param {string} commandType - Type of command (dev-update, learning, etc.)
+   * @param {Object} context - Additional context data
+   * @returns {Promise<string>} AI response
+   */
+  async executeMCPRequest(userMessage, commandType, context = {}) {
+    try {
+      // Ensure context loader is initialized
+      if (!systemContextLoader.loaded) {
+        await systemContextLoader.load();
+      }
+
+      // Build optimized system prompt
+      const systemPrompt = systemContextLoader.buildSystemPrompt(commandType, context);
+      
+      // Use optimized token settings for MCP commands
+      const temperature = context.temperature || 0.7;
+      const maxTokens = context.maxTokens || 200;
+
+      console.log(`[GroqService] MCP Request: ${commandType} | Est. tokens: ${Math.ceil(userMessage.length / 4)}`);
+      
+      // Execute with system context
+      return await this.getResponse(userMessage, systemPrompt, temperature, maxTokens);
+    } catch (error) {
+      console.error(`[GroqService] MCP Request failed (${commandType}):`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Get system context status
+   * @returns {Object} Context loader status
+   */
+  getContextStatus() {
+    return {
+      contextLoaded: systemContextLoader.loaded,
+      contextStatus: systemContextLoader.getStatus(),
+      groqStatus: this.getStatus(),
+    };
+  }
 }
 
 export default new GroqService();
+
