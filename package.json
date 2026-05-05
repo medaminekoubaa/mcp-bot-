@@ -1,0 +1,39 @@
+{
+  "name": "mcp-bot",
+  "description": "Discord MCP Bot - Team collaboration and motivation hub with AI",
+  "version": "1.0.0",
+  "main": "src/app.js",
+  "type": "module",
+  "engines": {
+    "node": ">=18.x"
+  },
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "register": "node src/register-commands.js",
+    "test": "node tests/test.js",
+    "check": "bash tests/check-prerequisites.sh",
+    "lint": "echo 'Linting...'",
+    "build": "echo 'Build complete'"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "mcp",
+    "ai",
+    "groq",
+    "mongodb"
+  ],
+  "author": "MCP Bot Team",
+  "license": "MIT",
+  "dependencies": {
+    "discord-interactions": "^4.0.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongodb": "^6.3.0",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}
