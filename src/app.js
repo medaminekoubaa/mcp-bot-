@@ -10,6 +10,7 @@ import mongodbService from './services/mongodbService.js';
 import groqService from './services/groqService.js';
 import logger from './services/logger.js';
 import rateLimiter from './services/rateLimiter.js';
+import channelGuard from './services/channelGuard.js';
 import { handleCommand } from './commands.js';
 import { handleDevUpdate } from './commands/devUpdate.js';
 import { handleMcpLearn } from './commands/mcpLearn.js';
@@ -19,6 +20,7 @@ import { handleChallengeSolver } from './commands/challengeSolver.js';
 import { handleAiInsights } from './commands/aiInsights.js';
 import { handleChat } from './commands/chat.js';
 import { handleAsk } from './commands/ask.js';
+import { handleChannelSetup } from './commands/channelSetup.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +34,7 @@ const COMMAND_HANDLERS = {
   'ai-insights': handleAiInsights,
   'chat': handleChat,
   'ask': handleAsk,
+  'channel-setup': handleChannelSetup,
   'task-completed': (req, res) => handleCommand(req, res, 'task-completed'),
   'yesterday-summary': (req, res) => handleCommand(req, res, 'yesterday-summary'),
   'today-plan': (req, res) => handleCommand(req, res, 'today-plan'),
@@ -52,6 +55,8 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async (re
     if (type === InteractionType.APPLICATION_COMMAND) {
       const { name } = data;
       const userId = req.body.member?.user?.id;
+      const channelId = req.body.channel_id;
+      const channelName = req.body.channel?.name || '';
 
       if (userId) {
         const rateLimitCheck = rateLimiter.checkLimit(userId);
@@ -66,9 +71,22 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async (re
         }
       }
 
+      // Check channel restrictions
+      const channelCheck = channelGuard.checkCommandAllowed(name, channelId, channelName);
+      if (!channelCheck.allowed) {
+        logger.warn('Bot', `Command not allowed in channel`, { name, channelName, userId });
+        return res.send({
+          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+          data: {
+            embeds: [channelGuard.createErrorEmbed(name, channelName)],
+            flags: 64, // Ephemeral
+          },
+        });
+      }
+
       const handler = COMMAND_HANDLERS[name];
       if (handler) {
-        logger.info('Bot', `Command executed: ${name}`, { userId });
+        logger.info('Bot', `Command executed: ${name}`, { userId, channelName });
         return await handler(req, res);
       }
 

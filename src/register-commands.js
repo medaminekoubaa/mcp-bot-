@@ -325,11 +325,36 @@ const MCP_COMMANDS = [
   },
 ];
 
-const ALL_COMMANDS = [...DAILY_TRACKING_COMMANDS, ...LEGACY_COMMANDS, ...MCP_COMMANDS];
+// Channel Organization Commands
+const ADMIN_COMMANDS = [
+  {
+    name: 'channel-setup',
+    description: 'Admin command to help organize and document channels',
+    options: [
+      {
+        name: 'action',
+        description: 'Setup action to perform',
+        type: 3, // STRING
+        required: true,
+        choices: [
+          { name: 'Channel Info', value: 'info' },
+          { name: 'Full Guide', value: 'guide' },
+          { name: 'Setup Instructions', value: 'setup' },
+        ],
+      },
+    ],
+    type: 1,
+    integration_types: [0, 1],
+    contexts: [0, 1, 2],
+  },
+];
+
+const ALL_COMMANDS = [...DAILY_TRACKING_COMMANDS, ...LEGACY_COMMANDS, ...MCP_COMMANDS, ...ADMIN_COMMANDS];
 
 console.log('📋 Registering Discord commands...');
 console.log(`  Daily Tracking: ${DAILY_TRACKING_COMMANDS.length}`);
 console.log(`  MCP Commands: ${MCP_COMMANDS.length}`);
+console.log(`  Admin: ${ADMIN_COMMANDS.length}`);
 console.log(`  Legacy: ${LEGACY_COMMANDS.length}`);
 console.log(`  Total: ${ALL_COMMANDS.length}`);
 
