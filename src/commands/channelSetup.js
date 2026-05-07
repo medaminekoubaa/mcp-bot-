@@ -18,13 +18,6 @@ export async function handleChannelSetup(req, res) {
 
     logger.info('Commands/ChannelSetup', `Setup action: ${action}`, { userId });
 
-    // Defer response for guide (long embed)
-    if (action === 'guide') {
-      res.send({
-        type: InteractionResponseType.DEFERRED_CHANNEL_MESSAGE_WITH_SOURCE,
-      });
-    }
-
     let response;
 
     switch (action) {
@@ -47,10 +40,7 @@ export async function handleChannelSetup(req, res) {
         };
     }
 
-    if (!res.headersSent) {
-      res.send(response);
-    }
-
+    res.send(response);
     logger.info('Commands/ChannelSetup', `Response sent for action: ${action}`);
   } catch (error) {
     logger.error('Commands/ChannelSetup', 'Handler failed', { error: error.message });

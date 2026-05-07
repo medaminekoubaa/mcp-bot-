@@ -71,17 +71,22 @@ app.post('/interactions', verifyKeyMiddleware(process.env.PUBLIC_KEY), async (re
         }
       }
 
-      // Check channel restrictions
-      const channelCheck = channelGuard.checkCommandAllowed(name, channelId, channelName);
-      if (!channelCheck.allowed) {
-        logger.warn('Bot', `Command not allowed in channel`, { name, channelName, userId });
-        return res.send({
-          type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-          data: {
-            embeds: [channelGuard.createErrorEmbed(name, channelName)],
-            flags: 64, // Ephemeral
-          },
-        });
+      // List of commands exempt from channel restrictions (admin/setup commands)
+      const EXEMPT_COMMANDS = ['test', 'channel-setup'];
+
+      // Check channel restrictions (skip for exempt commands)
+      if (!EXEMPT_COMMANDS.includes(name)) {
+        const channelCheck = channelGuard.checkCommandAllowed(name, channelId, channelName);
+        if (!channelCheck.allowed) {
+          logger.warn('Bot', `Command not allowed in channel`, { name, channelName, userId });
+          return res.send({
+            type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+            data: {
+              embeds: [channelGuard.createErrorEmbed(name, channelName)],
+              flags: 64, // Ephemeral
+            },
+          });
+        }
       }
 
       const handler = COMMAND_HANDLERS[name];
